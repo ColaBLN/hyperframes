@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("fonts/inter-latin-900-normal.woff2") format("woff2");
+        font-weight: 900;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("fonts/inter-latin-500-normal.woff2") format("woff2");
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: "Space Grotesk";
+        src: url("fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: "Space Grotesk";
+        src: url("fonts/space-grotesk-latin-400-normal.woff2") format("woff2");
+        font-weight: 400;
+      }
+
+      :root {
+        --ink: #0b0b10;
+        --ink-2: #16161f;
+        --paper: #f2f0ea;
+        --muted: #9a98a6;
+        --lime: #c6ff3d;
+        --violet: #7b5cff;
+        --coral: #ff5a36;
+        --sky: #3dd6ff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ink);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "Inter", sans-serif;
+        color: var(--paper);
+      }
+
+      /* ---------- shared layers (untimed) ---------- */
+      #bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 45%, var(--ink-2) 0%, var(--ink) 70%);
+      }
+      #grid {
+        position: absolute;
+        inset: -120px;
+        background-image:
+          linear-gradient(rgba(242, 240, 234, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(242, 240, 234, 0.05) 1px, transparent 1px);
+        background-size: 120px 120px;
+      }
+      #glow {
+        position: absolute;
+        width: 1100px;
+        height: 1100px;
+        left: 410px;
+        top: -10px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(123, 92, 255, 0.28) 0%, rgba(123, 92, 255, 0) 65%);
+      }
+
+      .hud {
+        position: absolute;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 400;
+        font-size: 26px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--paper);
+        z-index: 50;
+      }
+      #hud-tl {
+        left: 96px;
+        top: 72px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      #hud-tl .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--coral);
+      }
+      #hud-tr {
+        right: 96px;
+        top: 72px;
+        font-variant-numeric: tabular-nums;
+      }
+      #hud-bl {
+        left: 96px;
+        bottom: 72px;
+        height: 34px;
+        overflow: hidden;
+        width: 700px;
+      }
+      #hud-bl .lbl {
+        position: absolute;
+        left: 0;
+        top: 0;
+        white-space: nowrap;
+      }
+      #hud-bl .lbl b {
+        color: var(--lime);
+        font-weight: 700;
+        margin-right: 18px;
+      }
+      #progress {
+        position: absolute;
+        right: 96px;
+        bottom: 86px;
+        width: 520px;
+        height: 4px;
+        background: rgba(242, 240, 234, 0.18);
+        z-index: 50;
+      }
+      #progress-fill {
+        width: 100%;
+        height: 100%;
+        background: var(--lime);
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+
+      /* ---------- scenes ---------- */
+      .scene {
+        position: absolute;
+        inset: 0;
+        background: transparent;
+      }
+      .center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* scene 1 — kinetic title */
+      .word {
+        display: flex;
+        overflow: hidden;
+        line-height: 0.86;
+        padding: 0 10px;
+      }
+      .word span {
+        display: inline-block;
+        font-weight: 900;
+        font-size: 300px;
+        letter-spacing: -0.04em;
+      }
+      #w-motion span {
+        color: var(--paper);
+      }
+      #w-design span {
+        color: var(--lime);
+      }
+      #s1-bar {
+        width: 980px;
+        height: 12px;
+        margin-top: 36px;
+        background: var(--lime);
+        transform-origin: left center;
+      }
+
+      /* scene 2 — shapes */
+      #shapes {
+        position: absolute;
+        left: 960px;
+        top: 500px;
+        width: 0;
+        height: 0;
+      }
+      .shape {
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        left: -130px;
+        top: -130px;
+      }
+      #sh-circle {
+        border-radius: 50%;
+        background: var(--violet);
+      }
+      #sh-square {
+        background: var(--lime);
+        border-radius: 0;
+      }
+      #sh-tri svg {
+        width: 260px;
+        height: 260px;
+        overflow: visible;
+      }
+      #sh-ring {
+        border-radius: 50%;
+        border: 4px dashed rgba(242, 240, 234, 0.35);
+        width: 820px;
+        height: 820px;
+        left: -410px;
+        top: -410px;
+      }
+      #s2-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 190px;
+        text-align: center;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 64px;
+        letter-spacing: -0.02em;
+      }
+
+      /* scene 3 — word cycle */
+      #cycle {
+        position: relative;
+        width: 1700px;
+        height: 330px;
+        overflow: hidden;
+      }
+      .cw {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 290px;
+        letter-spacing: -0.045em;
+        line-height: 1;
+      }
+      #cw-3 {
+        color: var(--lime);
+      }
+      #s3-sub {
+        margin-top: 30px;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 40px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--paper);
+      }
+
+      /* scene 4 — data */
+      #s4-wrap {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 140px;
+        padding: 120px 160px;
+      }
+      #stat {
+        position: relative;
+        width: 520px;
+        height: 520px;
+      }
+      #stat svg {
+        position: absolute;
+        inset: 0;
+        width: 520px;
+        height: 520px;
+        transform: rotate(-90deg);
+      }
+      #stat-num {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 200px;
+        letter-spacing: -0.05em;
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+      #stat-num small {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 400;
+        font-size: 36px;
+        letter-spacing: 0.3em;
+        color: var(--lime);
+        margin-top: 12px;
+      }
+      #bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 26px;
+        height: 520px;
+      }
+      .bar {
+        width: 78px;
+        background: var(--paper);
+        transform-origin: bottom center;
+      }
+      .bar.hi {
+        background: var(--lime);
+      }
+      .bar.v {
+        background: var(--violet);
+      }
+
+      /* scene 5 — 3D tiles */
+      #stage3d {
+        position: absolute;
+        inset: 0;
+        perspective: 1600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #tiles {
+        display: grid;
+        grid-template-columns: repeat(5, 220px);
+        grid-template-rows: repeat(3, 220px);
+        gap: 28px;
+        transform-style: preserve-3d;
+      }
+      .tile {
+        border-radius: 28px;
+        background: var(--ink-2);
+        border: 2px solid rgba(242, 240, 234, 0.14);
+      }
+      .tile.a {
+        background: var(--violet);
+      }
+      .tile.b {
+        background: var(--lime);
+      }
+      .tile.c {
+        background: var(--coral);
+      }
+      .tile.d {
+        background: var(--sky);
+      }
+      #s5-title {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 440px;
+        text-align: center;
+        font-weight: 900;
+        font-size: 190px;
+        letter-spacing: -0.04em;
+        color: var(--paper);
+        text-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      }
+
+      /* scene 6 — outro */
+      #iris {
+        position: absolute;
+        inset: 0;
+        background: var(--lime);
+        clip-path: circle(0% at 50% 50%);
+      }
+      #outro {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 120px 160px;
+        gap: 34px;
+        color: var(--ink);
+      }
+      .ol {
+        overflow: hidden;
+        line-height: 0.95;
+      }
+      .ol div {
+        font-weight: 900;
+        font-size: 168px;
+        letter-spacing: -0.045em;
+      }
+      #o-tags {
+        display: flex;
+        gap: 22px;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+      }
+      #o-tags span {
+        padding: 12px 26px;
+        border: 3px solid var(--ink);
+        border-radius: 999px;
+      }
+
+      /* transition wipes (untimed overlay) */
+      .wipe {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+      }
+      #wipe-a {
+        background: var(--lime);
+      }
+      #wipe-b {
+        background: var(--violet);
+      }
+      #wipe-c {
+        background: var(--coral);
+      }
+      #wipe-d {
+        background: var(--paper);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- shared background -->
+      <div id="bg"><div id="grid"></div><div id="glow"></div></div>
+
+      <!-- 01 · kinetic type -->
+      <section id="s1" class="scene clip" data-start="0" data-duration="1.6" data-track-index="1">
+        <div class="center">
+          <div class="word" id="w-motion">
+            <span>M</span><span>O</span><span>T</span><span>I</span><span>O</span><span>N</span>
+          </div>
+          <div class="word" id="w-design">
+            <span>D</span><span>E</span><span>S</span><span>I</span><span>G</span><span>N</span>
+          </div>
+          <div id="s1-bar"></div>
+        </div>
+      </section>
+
+      <!-- 02 · form -->
+      <section id="s2" class="scene clip" data-start="1.6" data-duration="1.8" data-track-index="1">
+        <div id="shapes">
+          <div class="shape" id="sh-ring"></div>
+          <div class="shape" id="sh-circle"></div>
+          <div class="shape" id="sh-square"></div>
+          <div class="shape" id="sh-tri">
+            <svg viewBox="0 0 260 260"><polygon points="130,10 250,240 10,240" fill="#ff5a36" /></svg>
+          </div>
+        </div>
+        <div id="s2-caption">Form. Rhythmus. Timing.</div>
+      </section>
+
+      <!-- 03 · typography -->
+      <section id="s3" class="scene clip" data-start="3.4" data-duration="1.8" data-track-index="1">
+        <div class="center">
+          <div id="cycle" data-layout-allow-overlap="true">
+            <div class="cw" id="cw-1" data-layout-allow-overlap="true">IDEEN</div>
+            <div class="cw" id="cw-2" data-layout-allow-overlap="true">IN</div>
+            <div class="cw" id="cw-3" data-layout-allow-overlap="true">BEWEGUNG</div>
+          </div>
+          <div id="s3-sub">Kinetische Typografie</div>
+        </div>
+      </section>
+
+      <!-- 04 · data -->
+      <section id="s4" class="scene clip" data-start="5.2" data-duration="1.8" data-track-index="1">
+        <div id="s4-wrap">
+          <div id="stat">
+            <svg viewBox="0 0 520 520">
+              <circle cx="260" cy="260" r="236" fill="none" stroke="rgba(242,240,234,0.12)" stroke-width="20" />
+              <circle
+                id="ring"
+                cx="260"
+                cy="260"
+                r="236"
+                fill="none"
+                stroke="#c6ff3d"
+                stroke-width="20"
+                stroke-linecap="round"
+                stroke-dasharray="1483"
+                stroke-dashoffset="1483"
+              />
+            </svg>
+            <div id="stat-num"><span id="num">0</span><small>FPS</small></div>
+          </div>
+          <div id="bars">
+            <div class="bar" style="height: 180px"></div>
+            <div class="bar v" style="height: 280px"></div>
+            <div class="bar" style="height: 230px"></div>
+            <div class="bar v" style="height: 360px"></div>
+            <div class="bar" style="height: 320px"></div>
+            <div class="bar hi" style="height: 500px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 · 3D -->
+      <section id="s5" class="scene clip" data-start="7" data-duration="1.5" data-track-index="1">
+        <div id="stage3d">
+          <div id="tiles">
+            <div class="tile a"></div><div class="tile"></div><div class="tile b"></div><div class="tile"></div><div class="tile c"></div>
+            <div class="tile"></div><div class="tile d"></div><div class="tile"></div><div class="tile a"></div><div class="tile"></div>
+            <div class="tile b"></div><div class="tile"></div><div class="tile c"></div><div class="tile"></div><div class="tile d"></div>
+          </div>
+        </div>
+        <div id="s5-title">3D &amp; Raum</div>
+      </section>
+
+      <!-- 06 · outro -->
+      <section id="s6" class="scene clip" data-start="8.5" data-duration="1.5" data-track-index="1">
+        <div id="iris"></div>
+        <div id="outro">
+          <div class="ol"><div id="o-1">Ideen, die</div></div>
+          <div class="ol"><div id="o-2">sich bewegen.</div></div>
+          <div id="o-tags">
+            <span>Motion Design</span><span>Animation</span><span>3D</span><span>Typografie</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- transition wipes -->
+      <div class="wipe" id="wipe-a" data-layout-allow-occlusion="true"></div>
+      <div class="wipe" id="wipe-b" data-layout-allow-occlusion="true"></div>
+      <div class="wipe" id="wipe-c" data-layout-allow-occlusion="true"></div>
+      <div class="wipe" id="wipe-d" data-layout-allow-occlusion="true"></div>
+
+      <!-- HUD -->
+      <div class="hud" id="hud-tl"><div class="dot"></div>Showreel 2026</div>
+      <div class="hud" id="hud-tr"><span id="tc">00:00:00</span> / 00:10:00</div>
+      <div class="hud" id="hud-bl" data-layout-allow-overlap="true">
+        <div class="lbl" id="lbl-1" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">01</b>Kinetic Type</div>
+        <div class="lbl" id="lbl-2" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">02</b>Form &amp; Shape</div>
+        <div class="lbl" id="lbl-3" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">03</b>Typografie</div>
+        <div class="lbl" id="lbl-4" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">04</b>Data Motion</div>
+        <div class="lbl" id="lbl-5" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">05</b>3D Space</div>
+        <div class="lbl" id="lbl-6" data-layout-allow-occlusion="true" data-layout-allow-overflow="true" data-layout-allow-overlap="true"><b data-layout-allow-occlusion="true">06</b>Kontakt</div>
+      </div>
+      <div id="progress"><div id="progress-fill"></div></div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------- global layers ----------
+      tl.fromTo("#progress-fill", { scaleX: 0 }, { scaleX: 1, duration: 10, ease: "none" }, 0);
+      tl.fromTo("#grid", { x: 0, y: 0 }, { x: 120, y: 120, duration: 10, ease: "none" }, 0);
+      tl.fromTo("#glow", { x: -300, scale: 0.9 }, { x: 300, scale: 1.15, duration: 10, ease: "sine.inOut" }, 0);
+      const tc = { t: 0 };
+      tl.fromTo(
+        tc,
+        { t: 0 },
+        {
+          t: 10,
+          duration: 10,
+          ease: "none",
+          onUpdate: () => {
+            const s = Math.floor(tc.t);
+            const f = Math.floor((tc.t - s) * 30);
+            document.getElementById("tc").textContent =
+              "00:" + String(s).padStart(2, "0") + ":" + String(f).padStart(2, "0");
+          },
+        },
+        0
+      );
+
+      // HUD section labels — roll in / out at scene boundaries
+      const marks = [0, 1.6, 3.4, 5.2, 7, 8.5];
+      marks.forEach((m, i) => {
+        const id = "#lbl-" + (i + 1);
+        tl.fromTo(id, { yPercent: 110 }, { yPercent: 0, duration: 0.35, ease: "expo.out" }, m + 0.05);
+        if (i < marks.length - 1) {
+          tl.to(id, { yPercent: -110, duration: 0.25, ease: "power2.in" }, marks[i + 1] - 0.2);
+        }
+      });
+
+      // ---------- transition wipes (cover each cut) ----------
+      const wipes = [
+        ["#wipe-a", 1.6],
+        ["#wipe-b", 3.4],
+        ["#wipe-c", 5.2],
+        ["#wipe-d", 7],
+      ];
+      wipes.forEach(([id, t]) => {
+        tl.fromTo(id, { xPercent: -101 }, { xPercent: 0, duration: 0.22, ease: "power3.in" }, t - 0.22);
+        tl.to(id, { xPercent: 101, duration: 0.3, ease: "power3.out" }, t);
+      });
+
+      // ---------- 01 · kinetic type ----------
+      tl.fromTo(
+        "#w-motion span",
+        { yPercent: 105 },
+        { yPercent: 0, duration: 0.7, ease: "expo.out", stagger: 0.045 },
+        0.05
+      );
+      tl.fromTo(
+        "#w-design span",
+        { yPercent: -105 },
+        { yPercent: 0, duration: 0.7, ease: "expo.out", stagger: 0.045 },
+        0.2
+      );
+      tl.fromTo("#s1-bar", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "expo.inOut" }, 0.3);
+      tl.fromTo("#s1 .center", { scale: 1 }, { scale: 1.08, duration: 1.6, ease: "none" }, 0);
+      tl.to("#w-motion span", { yPercent: -105, duration: 0.35, ease: "power3.in", stagger: 0.02 }, 1.2);
+      tl.to("#w-design span", { yPercent: 105, duration: 0.35, ease: "power3.in", stagger: 0.02 }, 1.22);
+
+      // ---------- 02 · form ----------
+      const s2 = 1.6;
+      tl.fromTo("#sh-circle", { x: -900, y: -200, scale: 0.4 }, { x: -340, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, s2 + 0.05);
+      tl.fromTo("#sh-square", { y: 700, rotation: -180, scale: 0.4 }, { y: 0, rotation: 0, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, s2 + 0.12);
+      tl.fromTo("#sh-tri", { x: 900, y: 200, scale: 0.4 }, { x: 340, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.6)" }, s2 + 0.19);
+      tl.fromTo("#sh-ring", { scale: 0.2, rotation: 0, autoAlpha: 0 }, { scale: 1, rotation: 90, autoAlpha: 1, duration: 1.7, ease: "expo.out" }, s2 + 0.05);
+      // morph the square into a circle and orbit everything
+      tl.to("#sh-square", { borderRadius: "50%", rotation: 90, scale: 0.7, duration: 0.45, ease: "elastic.out(1, 0.5)" }, s2 + 0.75);
+      tl.to("#sh-circle", { scale: 0.7, duration: 0.45, ease: "elastic.out(1, 0.5)" }, s2 + 0.8);
+      tl.to("#sh-tri", { scale: 0.7, rotation: 180, duration: 0.45, ease: "elastic.out(1, 0.5)" }, s2 + 0.85);
+      tl.fromTo("#shapes", { rotation: 0 }, { rotation: 120, duration: 1.0, ease: "power3.inOut" }, s2 + 0.75);
+      tl.fromTo("#s2-caption", { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: "expo.out" }, s2 + 0.4);
+
+      // ---------- 03 · word cycle ----------
+      const s3 = 3.4;
+      tl.fromTo("#cw-1", { yPercent: 100 }, { yPercent: 0, duration: 0.35, ease: "expo.out" }, s3 + 0.05);
+      tl.to("#cw-1", { yPercent: -100, duration: 0.3, ease: "power3.in" }, s3 + 0.5);
+      tl.fromTo("#cw-2", { yPercent: 100 }, { yPercent: 0, duration: 0.35, ease: "expo.out" }, s3 + 0.72);
+      tl.to("#cw-2", { yPercent: -100, duration: 0.25, ease: "power3.in" }, s3 + 1.08);
+      tl.fromTo(
+        "#cw-3",
+        { yPercent: 100, scaleX: 0.7 },
+        { yPercent: 0, scaleX: 1, duration: 0.55, ease: "expo.out" },
+        s3 + 1.15
+      );
+      tl.fromTo("#s3-sub", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: "expo.out" }, s3 + 0.2);
+      tl.fromTo("#cycle", { scale: 1.05 }, { scale: 0.95, duration: 1.8, ease: "none" }, s3);
+
+      // ---------- 04 · data ----------
+      const s4 = 5.2;
+      tl.fromTo("#ring", { attr: { "stroke-dashoffset": 1483 } }, { attr: { "stroke-dashoffset": 0 }, duration: 1.1, ease: "expo.inOut" }, s4 + 0.1);
+      const num = { v: 0 };
+      tl.fromTo(
+        num,
+        { v: 0 },
+        {
+          v: 60,
+          duration: 1.1,
+          ease: "expo.inOut",
+          onUpdate: () => {
+            document.getElementById("num").textContent = Math.round(num.v);
+          },
+        },
+        s4 + 0.1
+      );
+      tl.fromTo("#stat", { scale: 0.6, rotation: -20 }, { scale: 1, rotation: 0, duration: 0.6, ease: "back.out(1.7)" }, s4 + 0.05);
+      tl.fromTo(".bar", { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease: "back.out(1.4)", stagger: 0.08 }, s4 + 0.25);
+      tl.to(".bar.hi", { scaleY: 1.08, duration: 0.25, ease: "power2.out", yoyo: true, repeat: 1 }, s4 + 1.15);
+
+      // ---------- 05 · 3D ----------
+      const s5 = 7;
+      tl.fromTo(
+        "#tiles",
+        { rotationX: 70, rotationZ: -25, z: -600 },
+        { rotationX: 28, rotationZ: -12, z: 0, duration: 1.4, ease: "expo.out" },
+        s5
+      );
+      tl.fromTo(
+        ".tile",
+        { z: -400, autoAlpha: 0 },
+        { z: 0, autoAlpha: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { each: 0.03, grid: [3, 5], from: "center" } },
+        s5 + 0.05
+      );
+      tl.to(".tile", { z: 120, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1, stagger: { each: 0.03, grid: [3, 5], from: "start" } }, s5 + 0.65);
+      tl.fromTo("#s5-title", { autoAlpha: 0, scale: 1.4 }, { autoAlpha: 1, scale: 1, duration: 0.45, ease: "expo.out" }, s5 + 0.35);
+
+      // ---------- 06 · outro ----------
+      const s6 = 8.5;
+      tl.fromTo("#iris", { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: 0.55, ease: "expo.inOut" }, s6);
+      tl.fromTo("#o-1", { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: "expo.out" }, s6 + 0.35);
+      tl.fromTo("#o-2", { yPercent: 105 }, { yPercent: 0, duration: 0.5, ease: "expo.out" }, s6 + 0.45);
+      tl.fromTo("#o-tags span", { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: "back.out(1.6)", stagger: 0.06 }, s6 + 0.65);
+      // HUD turns dark on the lime outro
+      tl.to(".hud", { color: "#0b0b10", duration: 0.2, ease: "none" }, s6 + 0.3);
+      tl.to("#hud-bl .lbl b", { color: "#0b0b10", duration: 0.2, ease: "none" }, s6 + 0.3);
+      tl.to("#progress-fill", { backgroundColor: "#0b0b10", duration: 0.2, ease: "none" }, s6 + 0.3);
+      tl.to("#progress", { backgroundColor: "rgba(11,11,16,0.2)", duration: 0.2, ease: "none" }, s6 + 0.3);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
